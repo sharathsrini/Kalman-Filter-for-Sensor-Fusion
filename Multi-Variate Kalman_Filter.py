@@ -7,6 +7,7 @@ Created on Fri Nov 24 14:41:29 2017
 
 """
 import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
 import numpy as np
 from numpy.linalg import inv
 
@@ -107,14 +108,22 @@ Kdy= []
 filter(x,P)
 
 fig = plt.figure(figsize=(16,16))
-plt.scatter(xt,yt, s=20, label='State', c='k')
-plt.scatter(xt[0],yt[0], s=100, label='Start', c='g')
-plt.scatter(xt[-1],yt[-1], s=100, label='Goal', c='r')
+plt.scatter(xt,yt, s=20, c='k', label='_nolegend_')
+plt.scatter(xt[0],yt[0], s=100, c='g', label='_nolegend_')
+plt.scatter(xt[-1],yt[-1], s=100, c='r', label='_nolegend_')
 
 plt.xlabel('X')
 plt.ylabel('Y')
 plt.title('Position')
-plt.legend(loc='best')
+legend_elements = [
+    Line2D([0], [0], marker='o', color='w', label='State',
+           markerfacecolor='k', markersize=7),
+    Line2D([0], [0], marker='o', color='w', label='Start',
+           markerfacecolor='g', markersize=10),
+    Line2D([0], [0], marker='o', color='w', label='Goal',
+           markerfacecolor='r', markersize=10)
+]
+plt.legend(handles=legend_elements, loc='best')
 plt.axis('equal')
 
 
