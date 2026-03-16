@@ -14,7 +14,12 @@
 # limitations under the License.
 # ==============================================================================
 import os
+
 from IPython.lib import passwd
+from traitlets.config import get_config
+
+
+c = get_config()
 
 c.NotebookApp.ip = '*'
 c.NotebookApp.port = int(os.getenv('PORT', 8888))
