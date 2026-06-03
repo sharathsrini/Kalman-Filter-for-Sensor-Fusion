@@ -56,6 +56,7 @@ u = np.matrix([[0.], [0.], [0.], [0.]])
 measurements = np.matrix([[5.0, 10.0], [6.0, 8.0], [7.0, 6.0], [8.0, 4.0], [9.0, 2.0], [10.0, 0.0]])
 #measurements = np.matrix([[1., 4.], [6., 0.], [11., -4.], [16., -8.]])
 #measurements = np.matrix([[1., 17.], [1., 15.], [1., 13.], [1., 11.]])
+o = measurements.tolist()
 
 
 x = np.matrix([[4.], [12.], [0.0], [0.0]])# initial state (location and velocity)
@@ -110,6 +111,10 @@ fig = plt.figure(figsize=(16,16))
 plt.scatter(xt,yt, s=20, label='State', c='k')
 plt.scatter(xt[0],yt[0], s=100, label='Start', c='g')
 plt.scatter(xt[-1],yt[-1], s=100, label='Goal', c='r')
+plt.scatter(o[0][0],o[0][1], s=100, label='Start-measurement', c='y')
+plt.scatter(o[-1][0],o[-1][1], s=100, label='Goal-measurement', c='y')
+for i in range(len(o)):
+    plt.scatter(o[i][0],o[i][1], s=20, label='State', c='b')
 
 plt.xlabel('X')
 plt.ylabel('Y')
