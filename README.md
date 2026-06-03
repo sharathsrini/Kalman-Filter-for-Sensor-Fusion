@@ -1,18 +1,20 @@
 ## Kalman Filter for Sensor Fusion
 
-## Idea Of ​​The Kalman Filter In A Single-Dimension
+## Idea of the Kalman Filter in a Single Dimension
 
-Kalman filters are discrete systems that allows us to define a dependent variable by an independent variable, where by we will solve for the independent variable so that when we are given measurements (the dependent variable),we can infer an estimate     of the independent variable assuming that noise exists from our input measurement and noise also exists in how we’ve modeled the world with our math equations because of inevitably unaccounted for factors in the non-sterile world.Input variables become more valuable when modeled as a system of equations,ora  matrix, in order to make it possible to determine the relationships between those values. Every variables in every dimension will contain noise, and therefore the introduction of related inputs will allow weighted averaging to take place based on the predicted differential at the next step, the noise unaccounted for in the system,and the noise introduced by the sensor inputs.
+Kalman filters combine noisy sensor measurements with a mathematical model of system motion to estimate hidden state variables. By expressing related values as equations and matrices, the filter balances measurement noise against process noise and produces a more reliable estimate than either source alone.
 
 
 ```python
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import matplotlib.mlab as mlab
 import seaborn as sb
 from scipy import stats
 import time
+
+def gaussian_pdf(values, mean, variance):
+    return stats.norm.pdf(values, loc=mean, scale=np.sqrt(variance))
 ```
 
 
@@ -21,7 +23,7 @@ import time
 fw = 10 # figure width
 ```
 
-##  *Despite noisy measurement of individual sensors, We can calculate an optimal estimate of all conditions*.
+## *Despite noisy measurements from individual sensors, we can still calculate an optimal estimate of the system state.*
 
 ### https://in.udacity.com/course/artificial-intelligence-for-robotics--cs373
 
@@ -41,7 +43,7 @@ var0  = 20.0
 
 ```python
 plt.figure(figsize=(fw,5))
-plt.plot(x,mlab.normpdf(x, mean0, var0), label='Normal Distribution')
+plt.plot(x,gaussian_pdf(x, mean0, var0), label='Normal Distribution')
 plt.ylim(0, 0.1);
 plt.legend(loc='best');
 plt.xlabel('Position');
@@ -66,7 +68,7 @@ varMove  = 10.0
 
 ```python
 plt.figure(figsize=(fw,5))
-plt.plot(x,mlab.normpdf(x, meanMove, varMove), label='Normal Distribution')
+plt.plot(x,gaussian_pdf(x, meanMove, varMove), label='Normal Distribution')
 plt.ylim(0, 0.1);
 plt.legend(loc='best');
 plt.xlabel('Distance moved');
@@ -97,9 +99,9 @@ new_var, new_mean = predict(var0, mean0, varMove, meanMove)
 
 ```python
 plt.figure(figsize=(fw,5))
-plt.plot(x,mlab.normpdf(x, mean0, var0), label='Beginning Normal Distribution')
-plt.plot(x,mlab.normpdf(x, meanMove, varMove), label='Movement Normal Distribution')
-plt.plot(x,mlab.normpdf(x, new_mean, new_var), label='Resulting Normal Distribution')
+plt.plot(x,gaussian_pdf(x, mean0, var0), label='Beginning Normal Distribution')
+plt.plot(x,gaussian_pdf(x, meanMove, varMove), label='Movement Normal Distribution')
+plt.plot(x,gaussian_pdf(x, new_mean, new_var), label='Resulting Normal Distribution')
 plt.ylim(0, 0.1);
 plt.legend(loc='best');
 plt.title('Normal Distributions of 1st Kalman Filter Prediction Step');
@@ -127,7 +129,7 @@ varSensor  = 12.0
 
 ```python
 plt.figure(figsize=(fw,5))
-plt.plot(x,mlab.normpdf(x, meanSensor, varSensor))
+plt.plot(x,gaussian_pdf(x, meanSensor, varSensor))
 plt.ylim(0, 0.1);
 ```
 
@@ -154,9 +156,9 @@ var, mean = correct(new_var, new_mean, varSensor, meanSensor)
 
 ```python
 plt.figure(figsize=(fw,5))
-plt.plot(x,mlab.normpdf(x, new_mean, new_var), label='Beginning (after Predict)')
-plt.plot(x,mlab.normpdf(x, meanSensor, varSensor), label='Position Sensor Normal Distribution')
-plt.plot(x,mlab.normpdf(x, mean, var), label='New Position Normal Distribution')
+plt.plot(x,gaussian_pdf(x, new_mean, new_var), label='Beginning (after Predict)')
+plt.plot(x,gaussian_pdf(x, meanSensor, varSensor), label='Position Sensor Normal Distribution')
+plt.plot(x,gaussian_pdf(x, mean, var), label='New Position Normal Distribution')
 plt.ylim(0, 0.1);
 plt.legend(loc='best');
 plt.title('Normal Distributions of 1st Kalman Filter Update Step');
@@ -210,12 +212,12 @@ for m in range(len(positions)):
     # Predict
     var, mean = predict(var, mean, varMove, distances[m])
     #print('mean: %.2f\tvar:%.2f' % (mean, var))
-    plt.plot(x,mlab.normpdf(x, mean, var), label='%i. step (Prediction)' % (m+1))
+    plt.plot(x,gaussian_pdf(x, mean, var), label='%i. step (Prediction)' % (m+1))
     
     # Correct
     var, mean = correct(var, mean, varSensor, positions[m])
     print('After correction:  mean= %.2f\tvar= %.2f' % (mean, var))
-    plt.plot(x,mlab.normpdf(x, mean, var), label='%i. step (Correction)' % (m+1))
+    plt.plot(x,gaussian_pdf(x, mean, var), label='%i. step (Correction)' % (m+1))
     
 plt.ylim(0, 0.1);
 plt.xlim(-20, 120)
@@ -260,7 +262,7 @@ So far the perfect world. But the calculation takes over a microcontroller and t
 Speed-time course of a measurement
 Speed-time course of a measurement
 
-On average, the measured speed is already correct, but there is some "noise". If one calculates a histogram of the determined speeds, one sees that the determined values ​​are approximately subject to a normal distribution.
+On average, the measured speed is already correct, but there is some "noise". If one calculates a histogram of the determined speeds, one sees that the determined values are approximately subject to a normal distribution.
 
 Histogram of measured velocity with normal distribution
 Histogram of measured velocity with normal distribution
@@ -333,7 +335,7 @@ While plotting the matrix, make sure we label:
 
 An uncertainty must be given for the initial state  x0 . In the 1D case, the σ0 , now a matrix, defines an initial uncertainty for all states.
 
-This matrix is ​​most likely to be changed during the filter passes. It is changed in both the Predict and Correct steps. If one is quite sure about the states at the beginning, one can use low values ​​here, if one does not know exactly how the values ​​of the state vector are, the covariance matrix should be Pinitialized with very large values ​​(1 million or so) to allow the filter to converge relatively quickly (find the right values ​​based on the measurements).
+This matrix is most likely to be changed during the filter passes. It is changed in both the Predict and Correct steps. If one is quite sure about the states at the beginning, one can use low values here, if one does not know exactly how the values of the state vector are, the covariance matrix should be Pinitialized with very large values (1 million or so) to allow the filter to converge relatively quickly (find the right values based on the measurements).
 
 
 
@@ -395,7 +397,7 @@ dt = 0.1
 ### Measurement Matrix $H$
 
 
-The filter must also be told what is measured and how it relates to the state vector. In the example of the vehicle, what enters a tunnel, only the speed, not the position! The values ​​can be measured directly with the factor 1 (ie the velocity is measured directly in the correct unit), which is why in only 1.0 is set to the appropriate position.H
+The filter must also be told what is measured and how it relates to the state vector. In the example of the vehicle, what enters a tunnel, only the speed, not the position! The values can be measured directly with the factor 1 (ie the velocity is measured directly in the correct unit), which is why in only 1.0 is set to the appropriate position.H
 
 
 ```python
@@ -429,7 +431,7 @@ Measurement noise covariance matrix R
 As in the one-dimensional case the variance , a measurement uncertainty must also be stated here.σ0
 
 
-This measurement uncertainty indicates how much one trusts the measured values ​​of the sensors. Since we measure only $\dot x$ and  $\dot y$ , this is a 2 × 2 matrix. If the sensor is very accurate, small values ​​should be used here. If the sensor is relatively inaccurate, large values ​​should be used here for  $\dot x$, $\dot y$
+This measurement uncertainty indicates how much one trusts the measured values of the sensors. Since we measure only $\dot x$ and  $\dot y$ , this is a 2 × 2 matrix. If the sensor is very accurate, small values should be used here. If the sensor is relatively inaccurate, large values should be used here for  $\dot x$, $\dot y$
 
 
 ```python
@@ -493,7 +495,7 @@ Q
 
 
 ## Unit matrix $I$
-Last but not least a unit matrix is ​​necessary.
+Last but not least a unit matrix is necessary.
 
 
 ```python
@@ -618,7 +620,7 @@ S=(H⋅P⋅H′+R)
 This determines the so-called Kalman gain. It states whether the readings or system dynamics should be more familiar.
 
 #### *K= P⋅ H'S*
-The Kalman Gain will decrease if the readings match the predicted system state. If the measured values ​​say otherwise, the elements of matrix K become larger.
+The Kalman Gain will decrease if the readings match the predicted system state. If the measured values say otherwise, the elements of matrix K become larger.
 
 This information is now used to update the system state.
 
@@ -2927,6 +2929,8 @@ Q = G*G.T*sv**2
 
 ```
 
+
+Run the final Udacity assignment example with the configured matrices:
 
 ```python
 filter(x,P)
